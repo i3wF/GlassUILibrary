@@ -1,5 +1,5 @@
 ﻿-- Load the library via HttpGet
-local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/i3wf/GlassUILibrary/main/source.lua"))()
+local Ui = loadstring(game:HttpGet("https://raw.githubusercontent.com/i3wF/GlassUILibrary/refs/heads/main/source.lua"))()
 -- Alternative: ModuleScript in ReplicatedStorage
 -- local Ui = require(game.ReplicatedStorage.GlassUILibrary.source)
 
