@@ -129,7 +129,19 @@ function UI.New(title, subtitle, opts)
 		DisplayOrder = 9999,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 	})
-	attachGui(sg, STEALTH)
+	if not STEALTH then
+		sg:SetAttribute("GlassUI_Window", true)
+	end
+	local host = attachGui(sg, STEALTH)
+	if host and not STEALTH then
+		for _, other in ipairs(host:GetChildren()) do
+			pcall(function()
+				if other ~= sg and other.ClassName == "ScreenGui" and other:GetAttribute("GlassUI_Window") then
+					other:Destroy()
+				end
+			end)
+		end
+	end
 	local ddOverlay
 	local function getOverlay()
 		if not ddOverlay then
@@ -472,6 +484,7 @@ function UI.New(title, subtitle, opts)
 
 	function Win:Tab(name)
 		name = name or "Tab"
+		local tabOrder = #Win.Tabs + 1
 		local btn = New("TextButton", {
 			Name = "Tab_" .. name,
 			BackgroundTransparency = 1,
@@ -481,6 +494,7 @@ function UI.New(title, subtitle, opts)
 			TextColor3 = Color3.fromRGB(255, 255, 255),
 			TextSize = 17,
 			AutoButtonColor = false,
+			LayoutOrder = tabOrder,
 		}, topNav)
 		corner(btn, 14)
 		stroke(btn, Color3.fromRGB(255, 255, 255), 1, 0.32)
@@ -503,8 +517,9 @@ function UI.New(title, subtitle, opts)
 			CanvasSize = UDim2.new(0, 0, 0, 0),
 			ScrollBarThickness = 2,
 			Visible = false,
+			LayoutOrder = tabOrder,
 		}, content)
-		local lo = New("UIListLayout", { Padding = UDim.new(0, 12) }, frame)
+		local lo = New("UIListLayout", { Padding = UDim.new(0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, frame)
 
 		local function u2()
 			frame.CanvasSize = UDim2.new(0, 0, 0, lo.AbsoluteContentSize.Y + 6)
@@ -537,14 +552,17 @@ function UI.New(title, subtitle, opts)
 			sel()
 		end
 
+		local sectionOrder = 0
 		function tab:Section(title)
 			title = title or "Section"
+			sectionOrder = sectionOrder + 1
 			local sec = New("Frame", {
 				Name = title:gsub("%W", "") .. "Section",
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1, -4, 0, 0),
 				AutomaticSize = Enum.AutomaticSize.Y,
 				BorderSizePixel = 0,
+				LayoutOrder = sectionOrder,
 			}, frame)
 			New("UIPadding", {
 				PaddingTop = UDim.new(0, 14),
@@ -552,7 +570,7 @@ function UI.New(title, subtitle, opts)
 				PaddingLeft = UDim.new(0, 14),
 				PaddingRight = UDim.new(0, 14),
 			}, sec)
-			local sl = New("UIListLayout", { Padding = UDim.new(0, 10) }, sec)
+			local sl = New("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, sec)
 			New("TextLabel", {
 				BackgroundTransparency = 1,
 				Size = UDim2.new(1, 0, 0, 18),
@@ -560,15 +578,18 @@ function UI.New(title, subtitle, opts)
 				Text = title,
 				TextColor3 = Color3.fromRGB(255, 255, 255),
 				TextSize = 17,
+				LayoutOrder = 0,
 			}, sec)
 			sl:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 				updCanvas()
 				u2()
 			end)
 			local S = {}
+			local ctrlOrder = 0
 
 			function S:Button(name, fn)
 				fn = fn or function() end
+				ctrlOrder = ctrlOrder + 1
 				local b = New("TextButton", {
 					BackgroundColor3 = THEME.BG_INPUT,
 					BackgroundTransparency = 0.75,
@@ -578,6 +599,7 @@ function UI.New(title, subtitle, opts)
 					TextColor3 = Color3.fromRGB(255, 255, 255),
 					TextSize = 15,
 					AutoButtonColor = false,
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				corner(b, 12)
 				stroke(b, Color3.fromRGB(255, 255, 255), 1.2, 0.62)
@@ -602,10 +624,12 @@ function UI.New(title, subtitle, opts)
 			function S:Toggle(name, def, fn)
 				def = def or false
 				fn = fn or function() end
+				ctrlOrder = ctrlOrder + 1
 				local row = New("Frame", {
 					BackgroundTransparency = 1,
 					Size = UDim2.new(1, 0, 0, 48),
 					BorderSizePixel = 0,
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				New("TextLabel", {
 					BackgroundTransparency = 1,
@@ -661,9 +685,11 @@ function UI.New(title, subtitle, opts)
 				fn = fn or function() end
 				def = math.clamp(def, mn, mx)
 				local range = (mx - mn > 0) and (mx - mn) or 1
+				ctrlOrder = ctrlOrder + 1
 				local fr = New("Frame", {
 					BackgroundTransparency = 1,
 					Size = UDim2.new(1, 0, 0, 58),
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				New("TextLabel", {
 					BackgroundTransparency = 1,
@@ -752,6 +778,7 @@ function UI.New(title, subtitle, opts)
 				list = list or {}
 				def = def or list[1]
 				fn = fn or function() end
+				ctrlOrder = ctrlOrder + 1
 				local fr = New("Frame", {
 					Name = "DropdownFrame_" .. name:gsub("%W", ""),
 					BackgroundTransparency = 1,
@@ -759,6 +786,7 @@ function UI.New(title, subtitle, opts)
 					BorderSizePixel = 0,
 					ClipsDescendants = false,
 					ZIndex = 2,
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				New("TextLabel", {
 					Name = "DropdownTitle_" .. name:gsub("%W", ""),
@@ -1012,9 +1040,11 @@ function UI.New(title, subtitle, opts)
 			function S:Box(name, ph, fn)
 				ph = ph or ""
 				fn = fn or function() end
+				ctrlOrder = ctrlOrder + 1
 				local row = New("Frame", {
 					BackgroundTransparency = 1,
 					Size = UDim2.new(1, 0, 0, 58),
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				New("TextLabel", {
 					BackgroundTransparency = 1,
@@ -1046,9 +1076,11 @@ function UI.New(title, subtitle, opts)
 			function S:Keybind(name, def, fn)
 				def = def or Enum.KeyCode.Q
 				fn = fn or function() end
+				ctrlOrder = ctrlOrder + 1
 				local row = New("Frame", {
 					BackgroundTransparency = 1,
 					Size = UDim2.new(1, 0, 0, 48),
+					LayoutOrder = ctrlOrder,
 				}, sec)
 				New("TextLabel", {
 					BackgroundTransparency = 1,
