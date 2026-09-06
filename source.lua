@@ -83,12 +83,6 @@ end
 local function tween(o, pr)
 	TweenService:Create(o, TweenInfo.new(0.2, Enum.EasingStyle.Quad), pr):Play()
 end
-if not game:GetService("Lighting"):FindFirstChild("GlassUI_Blur") then
-	local b = Instance.new("BlurEffect")
-	b.Name = "GlassUI_Blur"
-	b.Size = 22
-	b.Parent = game:GetService("Lighting")
-end
 local THEME = {
 	ACCENT = Color3.fromRGB(0, 122, 255),
 	ACCENT_HOVER = Color3.fromRGB(20, 135, 255),
